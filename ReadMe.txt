@@ -1,0 +1,1 @@
+The code will work if you have the jQuery.cookie.js plugin

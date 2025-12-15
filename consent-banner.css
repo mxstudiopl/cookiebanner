@@ -1,0 +1,234 @@
+/*====== Consent Window =========*/
+.consent_banner {
+	width: 95%;
+	max-width: 720px;
+	padding: 15px 50px;
+	position: fixed;
+	background: #ffffff;
+	top: -5000px;
+	left: 50%;
+	right: 0;
+	z-index: 99999;
+	box-shadow: 0 0 8px 2px rgba(0, 0, 0, .2);
+	transition: all 1s ease-in-out;
+}
+
+.consent_banner.active {
+	top: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.consent_banner .consent_banner-body {
+	padding: 15px 0;
+	position: relative;
+	overflow: hidden;
+}
+
+.consent_banner-preview {
+	position: relative;
+	left: 0;
+	transition: all .5s ease-in-out;
+}
+
+.consent_banner-preview h2 {
+	color: #00852D;
+}
+
+.consent_banner .consent_banner-body.sets .consent_banner-preview {
+	left: -100%;
+}
+
+.consent_banner .consent_banner-btns {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+@media (max-width: 480px) {
+	.consent_banner .consent_banner-btns {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}
+
+.consent_banner .banner-btn {
+	background: #00852D;
+	border: 1px solid #00852D;
+	padding: 6px 20px;
+	color: #ffffff;
+	margin: 0 5px;
+	transition: all .3s ease-in-out;
+	text-decoration: none;
+	display: inline-block;
+	cursor: pointer;
+}
+
+@media (max-width: 480px) {
+	.consent_banner .banner-btn {
+		margin-bottom: 5px;
+		margin-left: 0;
+	}
+}
+
+.consent_banner .banner-btn:first-child {
+	margin-left: 0;
+}
+
+.consent_banner .banner-btn:last-child {
+	margin-right: 0;
+}
+
+.consent_banner .banner-btn:hover {
+	text-decoration: none;
+	background: #ffffff;
+	color: #00852D;
+}
+
+.consent_banner .banner-btn-deny {
+	background: #ffffff;
+	color: #00852D;
+	margin-left: auto;
+}
+
+@media (max-width: 480px) {
+	.consent_banner .banner-btn-deny {
+		margin-bottom: 5px;
+		margin-left: 0;
+	}
+}
+
+.consent_banner .banner-btn-deny:hover {
+	background: #00852D;
+	color: #ffffff;
+}
+
+.consent_banner .consent_banner-settings {
+	width: 100%;
+	height: calc(100% - 30px);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	position: absolute;
+	top: 15px;
+	right: -100%;
+	transition: all .5s ease-in-out;
+}
+
+.consent_banner .consent_banner-body.sets .consent_banner-settings {
+	right: 0;
+}
+
+.consent_banner .consent_banner-settings .consent_banner-settings_block {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.consent_banner .consent_banner-settings .consent_banner-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-bottom: 15px;
+}
+
+@media (max-width: 767px) {
+	.consent_banner .consent_banner-settings .consent_banner-row {
+		width: 50%;
+		margin-bottom: 15px;
+	}
+}
+
+@media (max-width: 480px) {
+	.consent_banner .consent_banner-settings .consent_banner-row {
+		width: 100%;
+	}
+}
+
+.consent_banner .consent_banner-settings .consent_banner-settings_btns {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	align-items: center;
+}
+
+@media (max-width: 480px) {
+	.consent_banner .consent_banner-settings .consent_banner-settings_btns {
+		justify-content: space-between;
+	}
+}
+
+.setting_check {
+	display: none;
+}
+
+.setting_label {
+	position: relative;
+	cursor: pointer;
+	width: 45px;
+	height: 25px;
+	max-width: none;
+	margin-right: 5px;
+	margin-bottom: 0;
+	font-weight: 400;
+}
+
+.setting_label::before {
+	content: '';
+	width: 45px;
+	height: 25px;
+	border-radius: 18px;
+	border: 2px solid #00852D;
+	background-color: #ffffff;
+	box-shadow: inset -1px -1px 8px 0 rgba(247, 23, 53, .2);
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1;
+}
+
+.setting_check:checked + label::before {
+	background-color: #00852D;
+}
+
+.setting_label::after {
+	content: '';
+	width: 21px;
+	height: 21px;
+	border-radius: 50%;
+	border: 1px solid #00852D;
+	background: #ffffff;
+	font-size: 16px;
+	color: #ffffff;
+	position: absolute;
+	top: 2px;
+	left: 1px;
+	z-index: 2;
+	box-shadow: inset -1px -1px 5px 1px rgba(0, 0, 0, .5);
+}
+
+.setting_check:checked + label::after {
+	right: 1px;
+	left: auto;
+}
+
+.setting_check:disabled:checked + label::after,
+.setting_check:disabled:checked + label::before {
+	opacity: .5;
+	cursor: not-allowed;
+}
+
+.consent-overlay {
+	display: none;
+	width: 100%;
+	height: 100vh;
+	background: rgba(0, 0, 0, .6);
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 99990;
+}
+

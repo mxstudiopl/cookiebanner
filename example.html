@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пример использования Cookie Consent Banner</title>
+    
+    <!-- Подключение CSS стилей банера -->
+    <link rel="stylesheet" href="consent-banner.css">
+    
+    <!-- Подключение jQuery (необходимо перед jquery.cookie.js) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Подключение jQuery Cookie плагина -->
+    <script src="jquery.cookie.js"></script>
+</head>
+<body>
+    <h1>Пример страницы с баннером согласия на cookies</h1>
+    <p>Баннер появится через 3 секунды, если cookie не установлен.</p>
+    
+    <!-- HTML структура банера -->
+    <!-- Вставьте содержимое файла consent-banner.html здесь -->
+    <div id="consent_banner" class="consent_banner">
+        <div class="container">
+            <div class="consent_banner-body">
+                <div class="consent_banner-preview">
+                    <h2>Cookie Consent</h2>
+                    <p>Ta strona internetowa używa informacji zapisanych w plikach cookies. Korzystając z serwisu wyrażasz zgodę na używanie plików cookies zgodnie z aktualnymi ustawieniami Twojej przeglądarki, które możesz zmienić w dowolnej chwili. Czytaj więcej</p>
+                    <div class="consent_banner-btns">
+                        <a href="javascript:;" class="banner-btn banner-btn-primary js-all">Accept All</a>
+                        <a href="javascript:;" class="banner-btn banner-btn-primary js-set">Cookie Settings</a>
+                        <a href="javascript:;" class="banner-btn banner-btn-deny js-deny">Reject All</a>
+                    </div>
+                </div>
+                <div class="consent_banner-settings">
+                    <div class="consent_banner-settings_block">
+                        <div class="consent_banner-row">
+                            <input class="setting_check" type="checkbox" name="ad_storage" id="ad_storage" checked disabled>
+                            <label class="setting_label" for="ad_storage"></label>
+                            <span>Storage Cookie</span>
+                        </div>
+                        <div class="consent_banner-row">
+                            <input id="ad_user_data" class="setting_check" type="checkbox" name="ad_user_data" checked>
+                            <label class="setting_label" for="ad_user_data"></label>
+                            <span>User Data Cookie</span>
+                        </div>
+                        <div class="consent_banner-row">
+                            <input id="ad_personalization" class="setting_check" type="checkbox" name="ad_personalization" checked>
+                            <label class="setting_label" for="ad_personalization"></label>
+                            <span>Personalization Cookie</span>
+                        </div>
+                        <div class="consent_banner-row">
+                            <input id="analytics_storage" class="setting_check" type="checkbox" name="analytics_storage" checked>
+                            <label class="setting_label" for="analytics_storage"></label>
+                            <span>Analitics Cookie</span>
+                        </div>
+                    </div>
+                    <div class="consent_banner-settings_btns">
+                        <a href="javascript:;" class="banner-btn banner-btn-primary js-save">Set Cookie</a>
+                        <a href="javascript:;" class="banner-btn banner-btn-deny js-back">Back</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="consent-overlay"></div>
+    
+    <!-- Подключение JavaScript логики банера -->
+    <script src="consent.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Consent Banner Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .content {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 24px;
+            line-height: 1.6;
+        }
+    </style>
+    <!-- Подключаем стили плагина -->
+    <link rel="stylesheet" href="cookie-consent-banner/assets/css/consent-banner.css">
+</head>
+<body>
+    <div class="content">
+        <h1>Test Page</h1>
+        <p>This page is used to test Cookie Consent Banner</p>
+        <p>Banner should appear in 3 seconds</p>
+    </div>
+
+    <!-- Подключаем jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Подключаем jQuery Cookie -->
+    <script src="cookie-consent-banner/assets/js/jquery.cookie.js"></script>
+    <!-- Подключаем скрипт плагина -->
+    <script src="cookie-consent-banner/assets/js/consent.js"></script>
+
+    <!-- HTML баннера (в реальном WordPress это выводится через плагин) -->
+    <style>
+        #ccb-modal {
+            --ccb-primary-color: #3274BB;
+        }
+    </style>
+    <div id="ccb-modal" class="ccb-modal" data-ccb="true" data-brave-unblock="true" data-adblock-unblock="true" role="dialog" aria-modal="true" aria-labelledby="ccb-modal-title">
+        <div class="container">
+            <div class="ccb-modal-body">
+                <div class="ccb-modal-preview">
+                    <h2 id="ccb-modal-title">Cookie Consent</h2>
+                    <p>This website uses cookies to store information on your computer. By using this site, you consent to the use of cookies in accordance with your current browser settings, which you can change at any time.</p>
+                    <div class="ccb-modal-btns">
+                        <a href="javascript:;" class="ccb-btn ccb-btn-primary js-all" data-ccb-btn="accept">Accept All</a>
+                        <a href="javascript:;" class="ccb-settings-link-inline js-set" data-ccb-btn="settings">Cookie Settings</a>
+                    </div>
+                </div>
+                <div class="ccb-modal-settings">
+                    <div class="ccb-modal-settings_block">
+                        <div class="ccb-modal-row">
+                            <input class="setting_check" type="checkbox" name="ad_storage" id="ad_storage" checked>
+                            <label class="setting_label" for="ad_storage"></label>
+                            <span>Advertising Cookies</span>
+                        </div>
+                        <div class="ccb-modal-row">
+                            <input id="analytics_storage" class="setting_check" type="checkbox" name="analytics_storage" checked>
+                            <label class="setting_label" for="analytics_storage"></label>
+                            <span>Analytics</span>
+                        </div>
+                        <div class="ccb-modal-row">
+                            <input id="ad_user_data" class="setting_check" type="checkbox" name="ad_user_data" checked>
+                            <label class="setting_label" for="ad_user_data"></label>
+                            <span>User Data</span>
+                        </div>
+                        <div class="ccb-modal-row">
+                            <input id="ad_personalization" class="setting_check" type="checkbox" name="ad_personalization" checked>
+                            <label class="setting_label" for="ad_personalization"></label>
+                            <span>Personalization</span>
+                        </div>
+                        <div class="ccb-modal-row">
+                            <input id="personalization_storage" class="setting_check" type="checkbox" name="personalization_storage" checked>
+                            <label class="setting_label" for="personalization_storage"></label>
+                            <span>Personalization Storage</span>
+                        </div>
+                        <div class="ccb-modal-row">
+                            <input id="functionality_storage" class="setting_check" type="checkbox" name="functionality_storage" checked>
+                            <label class="setting_label" for="functionality_storage"></label>
+                            <span>Necessary Cookies</span>
+                        </div>
+                        <div class="ccb-modal-row">
+                            <input id="security_storage" class="setting_check" type="checkbox" name="security_storage" checked>
+                            <label class="setting_label" for="security_storage"></label>
+                            <span>Security</span>
+                        </div>
+                    </div>
+                    <div class="ccb-modal-settings_btns">
+                        <a href="javascript:;" class="ccb-btn ccb-btn-primary js-save" data-ccb-btn="save">Set Cookie</a>
+                        <a href="javascript:;" class="ccb-btn ccb-btn-deny js-back" data-ccb-btn="back">Back</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="ccb-overlay" data-ccb-overlay="true"></div>
+
+    <!-- Consent Mode Script -->
+    <script id="header_consent">
+      window.dataLayer = window.dataLayer || []
+
+      function gtag () {
+        dataLayer.push(arguments)
+      }
+
+      gtag('consent', 'default', {
+            'ad_storage':         'denied',
+            'ad_user_data':       'denied',
+            'ad_personalization': 'denied',
+            'analytics_storage':  'denied',
+            'personalization_storage': 'denied',
+            'functionality_storage': 'granted',
+            'security_storage': 'granted'
+          })
+
+      // Try to read cookie (works with both jQuery.cookie and native cookies)
+      var consentCookie = null;
+      if (typeof jQuery !== 'undefined' && typeof jQuery.cookie === 'function') {
+        consentCookie = jQuery.cookie('consent_cookie');
+      } else {
+        var cookies = document.cookie.split('; ');
+        var cookieRow = cookies.find(function(row) { return row.startsWith('consent_cookie='); });
+        if (cookieRow) {
+          consentCookie = decodeURIComponent(cookieRow.split('=').slice(1).join('='));
+        }
+      }
+      
+      if (consentCookie && consentCookie !== 'false') {
+        try {
+          var cookieObject = JSON.parse(consentCookie);
+          gtag('consent', 'update', cookieObject);
+        } catch(e) {
+          // Cookie parsing failed, use default
+        }
+      }
+    </script>
+</body>
+</html>
+

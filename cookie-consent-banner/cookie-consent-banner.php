@@ -3,7 +3,7 @@
  * Plugin Name: Cookie Consent Banner
  * Plugin URI: https://github.com/mxstudiopl/cookiebanner.git
  * Description: Simple WordPress plugin for displaying cookie consent banner with Google Consent Mode v2 support
- * Version: 1.0.0
+ * Version: 1.0.2
  * Author: MX Studio
  * Author URI: https://mx-studio.pl
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('CCB_VERSION', '1.0.0');
+define('CCB_VERSION', '1.0.2');
 define('CCB_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CCB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('CCB_PLUGIN_FILE', __FILE__);
@@ -290,6 +290,9 @@ class Cookie_Consent_Banner {
         // Enqueue styles and scripts
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         
+        // Add consent mode to head (before analytics)
+        add_action('wp_head', array($this, 'render_consent_mode'), 1);
+        
         // Add banner to footer
         add_action('wp_footer', array($this, 'render_banner'));
         
@@ -336,6 +339,74 @@ class Cookie_Consent_Banner {
     }
     
     /**
+     * Render consent mode in head (before analytics)
+     */
+    public function render_consent_mode() {
+        // Check if plugin is active
+        $is_active = get_option('ccb_active', '1');
+        if ($is_active !== '1') {
+            return;
+        }
+        
+        $ga_id = get_option('ccb_ga_id', '');
+        ?>
+        <script id="header_consent">
+          window.dataLayer = window.dataLayer || []
+
+          function gtag () {
+            dataLayer.push(arguments)
+          }
+
+          gtag('consent', 'default', {
+                'ad_storage':         'denied',
+                'ad_user_data':       'denied',
+                'ad_personalization': 'denied',
+                'analytics_storage':  'denied',
+                'personalization_storage': 'denied',
+                'functionality_storage': 'granted',
+                'security_storage': 'granted'
+              })
+
+          // Try to read cookie (works with both jQuery.cookie and native cookies)
+          var consentCookie = null;
+          if (typeof jQuery !== 'undefined' && typeof jQuery.cookie === 'function') {
+            consentCookie = jQuery.cookie('consent_cookie');
+          } else {
+            var cookies = document.cookie.split('; ');
+            var cookieRow = cookies.find(function(row) { return row.startsWith('consent_cookie='); });
+            if (cookieRow) {
+              consentCookie = decodeURIComponent(cookieRow.split('=').slice(1).join('='));
+            }
+          }
+          
+          if (consentCookie && consentCookie !== 'false') {
+            try {
+              var cookieObject = JSON.parse(consentCookie);
+              gtag('consent', 'update', cookieObject);
+            } catch(e) {
+              // Cookie parsing failed, use default
+            }
+          }
+        </script>
+        
+        <?php if (!empty($ga_id)): ?>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <!-- Note: If you use Google Tag Manager, you don't need to set GA ID here. GTM handles analytics. -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo esc_js($ga_id); ?>"></script>
+        <script>
+          window.dataLayer = window.dataLayer || []
+
+          function gtag () {dataLayer.push(arguments)}
+
+          gtag('js', new Date())
+
+          gtag('config', '<?php echo esc_js($ga_id); ?>')
+        </script>
+        <?php endif; ?>
+        <?php
+    }
+    
+    /**
      * Render banner in footer
      */
     public function render_banner() {
@@ -353,102 +424,78 @@ class Cookie_Consent_Banner {
         $reject_all = get_option('ccb_reject_all', 'Reject All');
         $save = get_option('ccb_save', 'Set Cookie');
         $back = get_option('ccb_back', 'Back');
-        $ad_storage = get_option('ccb_ad_storage', 'Storage Cookie');
-        $ad_user_data = get_option('ccb_ad_user_data', 'User Data Cookie');
-        $ad_personalization = get_option('ccb_ad_personalization', 'Personalization Cookie');
-        $analytics_storage = get_option('ccb_analytics_storage', 'Analytics Cookie');
-        $ga_id = get_option('ccb_ga_id', '');
+        $ad_storage = get_option('ccb_ad_storage', 'Advertising Cookies');
+        $ad_user_data = get_option('ccb_ad_user_data', 'User Data');
+        $ad_personalization = get_option('ccb_ad_personalization', 'Personalization');
+        $analytics_storage = get_option('ccb_analytics_storage', 'Analytics');
+        $personalization_storage = get_option('ccb_personalization_storage', 'Personalization Storage');
+        $functionality_storage = get_option('ccb_functionality_storage', 'Necessary Cookies');
+        $security_storage = get_option('ccb_security_storage', 'Security');
         $primary_color = get_option('ccb_primary_color', '#00852D');
         ?>
         <style>
-            #consent_banner {
+            #ccb-modal {
                 --ccb-primary-color: <?php echo esc_attr($primary_color); ?>;
             }
         </style>
-        <div id="consent_banner" class="consent_banner">
+        <div id="ccb-modal" class="ccb-modal" data-ccb="true" data-brave-unblock="true" data-adblock-unblock="true" role="dialog" aria-modal="true" aria-labelledby="ccb-modal-title">
             <div class="container">
-                <div class="consent_banner-body">
-                    <div class="consent_banner-preview">
-                        <h2><?php echo esc_html($title); ?></h2>
+                <div class="ccb-modal-body">
+                    <div class="ccb-modal-preview">
+                        <h2 id="ccb-modal-title"><?php echo esc_html($title); ?></h2>
                         <p><?php echo esc_html($text); ?></p>
-                        <div class="consent_banner-btns">
-                            <a href="javascript:;" class="banner-btn banner-btn-primary js-all"><?php echo esc_html($accept_all); ?></a>
-                            <a href="javascript:;" class="banner-btn banner-btn-primary js-set"><?php echo esc_html($settings); ?></a>
-                            <a href="javascript:;" class="banner-btn banner-btn-deny js-deny"><?php echo esc_html($reject_all); ?></a>
+                        <div class="ccb-modal-btns">
+                            <a href="javascript:;" class="ccb-btn ccb-btn-primary js-all" data-ccb-btn="accept"><?php echo esc_html($accept_all); ?></a>
+                            <a href="javascript:;" class="ccb-settings-link-inline js-set" data-ccb-btn="settings"><?php echo esc_html($settings); ?></a>
                         </div>
                     </div>
-                    <div class="consent_banner-settings">
-                        <div class="consent_banner-settings_block">
-                            <div class="consent_banner-row">
-                                <input class="setting_check" type="checkbox" name="ad_storage" id="ad_storage" checked disabled>
+                    <div class="ccb-modal-settings">
+                        <div class="ccb-modal-settings_block">
+                            <div class="ccb-modal-row">
+                                <input class="setting_check" type="checkbox" name="ad_storage" id="ad_storage" checked>
                                 <label class="setting_label" for="ad_storage"></label>
                                 <span><?php echo esc_html($ad_storage); ?></span>
                             </div>
-                            <div class="consent_banner-row">
-                                <input id="ad_user_data" class="setting_check" type="checkbox" name="ad_user_data" checked>
-                                <label class="setting_label" for="ad_user_data"></label>
-                                <span><?php echo esc_html($ad_user_data); ?></span>
-                            </div>
-                            <div class="consent_banner-row">
-                                <input id="ad_personalization" class="setting_check" type="checkbox" name="ad_personalization" checked>
-                                <label class="setting_label" for="ad_personalization"></label>
-                                <span><?php echo esc_html($ad_personalization); ?></span>
-                            </div>
-                            <div class="consent_banner-row">
+                            <div class="ccb-modal-row">
                                 <input id="analytics_storage" class="setting_check" type="checkbox" name="analytics_storage" checked>
                                 <label class="setting_label" for="analytics_storage"></label>
                                 <span><?php echo esc_html($analytics_storage); ?></span>
                             </div>
+                            <div class="ccb-modal-row">
+                                <input id="ad_user_data" class="setting_check" type="checkbox" name="ad_user_data" checked>
+                                <label class="setting_label" for="ad_user_data"></label>
+                                <span><?php echo esc_html($ad_user_data); ?></span>
+                            </div>
+                            <div class="ccb-modal-row">
+                                <input id="ad_personalization" class="setting_check" type="checkbox" name="ad_personalization" checked>
+                                <label class="setting_label" for="ad_personalization"></label>
+                                <span><?php echo esc_html($ad_personalization); ?></span>
+                            </div>
+                            <div class="ccb-modal-row">
+                                <input id="personalization_storage" class="setting_check" type="checkbox" name="personalization_storage" checked>
+                                <label class="setting_label" for="personalization_storage"></label>
+                                <span><?php echo esc_html($personalization_storage); ?></span>
+                            </div>
+                            <div class="ccb-modal-row">
+                                <input id="functionality_storage" class="setting_check" type="checkbox" name="functionality_storage" checked>
+                                <label class="setting_label" for="functionality_storage"></label>
+                                <span><?php echo esc_html($functionality_storage); ?></span>
+                            </div>
+                            <div class="ccb-modal-row">
+                                <input id="security_storage" class="setting_check" type="checkbox" name="security_storage" checked>
+                                <label class="setting_label" for="security_storage"></label>
+                                <span><?php echo esc_html($security_storage); ?></span>
+                            </div>
                         </div>
-                        <div class="consent_banner-settings_btns">
-                            <a href="javascript:;" class="banner-btn banner-btn-primary js-save"><?php echo esc_html($save); ?></a>
-                            <a href="javascript:;" class="banner-btn banner-btn-deny js-back"><?php echo esc_html($back); ?></a>
+                        <div class="ccb-modal-settings_btns">
+                            <a href="javascript:;" class="ccb-btn ccb-btn-primary js-save" data-ccb-btn="save"><?php echo esc_html($save); ?></a>
+                            <a href="javascript:;" class="ccb-btn ccb-btn-deny js-back" data-ccb-btn="back"><?php echo esc_html($back); ?></a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="consent-overlay"></div>
-        
-        <script>
-          window.dataLayer = window.dataLayer || []
-
-          function gtag () {
-            dataLayer.push(arguments)
-          }
-
-          gtag('consent', 'default', {
-                'ad_storage':         'denied',
-                'ad_user_data':       'denied',
-                'ad_personalization': 'denied',
-                'analytics_storage':  'denied',
-                'personalization_storage': 'denied',
-                'functionality_storage': 'denied',
-                'security_storage': 'denied'
-              })
-
-          var consentCookie = jQuery.cookie('consent_cookie');
-
-          if (consentCookie && consentCookie != 'false') {
-            var cookieObject = JSON.parse(consentCookie);
-            console.log(cookieObject)
-            gtag('consent', 'update', cookieObject);
-          }
-        </script>
-        
-        <?php if (!empty($ga_id)): ?>
-        <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo esc_js($ga_id); ?>"></script>
-        <script>
-          window.dataLayer = window.dataLayer || []
-
-          function gtag () {dataLayer.push(arguments)}
-
-          gtag('js', new Date())
-
-          gtag('config', '<?php echo esc_js($ga_id); ?>')
-        </script>
-        <?php endif; ?>
+        <div class="ccb-overlay" data-ccb-overlay="true"></div>
         <?php
     }
     
@@ -481,6 +528,9 @@ class Cookie_Consent_Banner {
         register_setting('ccb_settings_group', 'ccb_ad_user_data');
         register_setting('ccb_settings_group', 'ccb_ad_personalization');
         register_setting('ccb_settings_group', 'ccb_analytics_storage');
+        register_setting('ccb_settings_group', 'ccb_personalization_storage');
+        register_setting('ccb_settings_group', 'ccb_functionality_storage');
+        register_setting('ccb_settings_group', 'ccb_security_storage');
         register_setting('ccb_settings_group', 'ccb_ga_id');
         register_setting('ccb_settings_group', 'ccb_primary_color');
         register_setting('ccb_settings_group', 'ccb_active');
@@ -507,6 +557,9 @@ class Cookie_Consent_Banner {
             update_option('ccb_ad_user_data', sanitize_text_field($_POST['ccb_ad_user_data']));
             update_option('ccb_ad_personalization', sanitize_text_field($_POST['ccb_ad_personalization']));
             update_option('ccb_analytics_storage', sanitize_text_field($_POST['ccb_analytics_storage']));
+            update_option('ccb_personalization_storage', sanitize_text_field($_POST['ccb_personalization_storage']));
+            update_option('ccb_functionality_storage', sanitize_text_field($_POST['ccb_functionality_storage']));
+            update_option('ccb_security_storage', sanitize_text_field($_POST['ccb_security_storage']));
             update_option('ccb_ga_id', sanitize_text_field($_POST['ccb_ga_id']));
             
             // Use hex code if provided, otherwise use color picker value
@@ -526,10 +579,13 @@ class Cookie_Consent_Banner {
         $reject_all = get_option('ccb_reject_all', 'Reject All');
         $save = get_option('ccb_save', 'Set Cookie');
         $back = get_option('ccb_back', 'Back');
-        $ad_storage = get_option('ccb_ad_storage', 'Storage Cookie');
-        $ad_user_data = get_option('ccb_ad_user_data', 'User Data Cookie');
-        $ad_personalization = get_option('ccb_ad_personalization', 'Personalization Cookie');
-        $analytics_storage = get_option('ccb_analytics_storage', 'Analytics Cookie');
+        $ad_storage = get_option('ccb_ad_storage', 'Advertising Cookies');
+        $ad_user_data = get_option('ccb_ad_user_data', 'User Data');
+        $ad_personalization = get_option('ccb_ad_personalization', 'Personalization');
+        $analytics_storage = get_option('ccb_analytics_storage', 'Analytics');
+        $personalization_storage = get_option('ccb_personalization_storage', 'Personalization Storage');
+        $functionality_storage = get_option('ccb_functionality_storage', 'Necessary Cookies');
+        $security_storage = get_option('ccb_security_storage', 'Security');
         $ga_id = get_option('ccb_ga_id', '');
         $primary_color = get_option('ccb_primary_color', '#00852D');
         $is_active = get_option('ccb_active', '1');
@@ -645,11 +701,35 @@ class Cookie_Consent_Banner {
                     </tr>
                     <tr>
                         <th scope="row">
+                            <label for="ccb_personalization_storage">Personalization Storage Label</label>
+                        </th>
+                        <td>
+                            <input type="text" id="ccb_personalization_storage" name="ccb_personalization_storage" value="<?php echo esc_attr($personalization_storage); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="ccb_functionality_storage">Functionality Storage Label</label>
+                        </th>
+                        <td>
+                            <input type="text" id="ccb_functionality_storage" name="ccb_functionality_storage" value="<?php echo esc_attr($functionality_storage); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="ccb_security_storage">Security Storage Label</label>
+                        </th>
+                        <td>
+                            <input type="text" id="ccb_security_storage" name="ccb_security_storage" value="<?php echo esc_attr($security_storage); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
                             <label for="ccb_ga_id">Google Analytics ID (optional)</label>
                         </th>
                         <td>
-                            <input type="text" id="ccb_ga_id" name="ccb_ga_id" value="<?php echo esc_attr($ga_id); ?>" class="regular-text" placeholder="UA-159534180-1" />
-                            <p class="description">Enter your Google Analytics ID if you want to automatically connect it</p>
+                            <input type="text" id="ccb_ga_id" name="ccb_ga_id" value="<?php echo esc_attr($ga_id); ?>" class="regular-text" placeholder="G-XXXXXXXXXX" />
+                            <p class="description">Enter your Google Analytics ID (GA4) if you want to connect it directly. <strong>Leave empty if you use Google Tag Manager</strong> - GTM handles analytics and consent mode works automatically through dataLayer.</p>
                         </td>
                     </tr>
                     <tr>
